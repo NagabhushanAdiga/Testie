@@ -69,12 +69,29 @@ app.post('/send-notification', async (req, res) => {
   }
 });
 
+// Root – so Vercel/root URL doesn’t return "Cannot GET /"
+app.get('/', (req, res) => {
+  res.json({
+    message: 'Push notification API',
+    endpoints: {
+      'GET /': 'This info',
+      'GET /health': 'Health check',
+      'POST /send-notification': 'Send FCM push (body: token, title, body, …)',
+    },
+  });
+});
+
 // Health check
 app.get('/health', (req, res) => {
   res.json({ ok: true, firebase: initialized });
 });
 
-app.listen(PORT, () => {
-  console.log(`Backend running at http://localhost:${PORT}`);
-  if (!initialized) console.log('Add serviceAccountKey.json or FIREBASE_SERVICE_ACCOUNT_JSON to send notifications.');
-});
+// Export for Vercel serverless; otherwise run locally
+if (process.env.VERCEL) {
+  module.exports = app;
+} else {
+  app.listen(PORT, () => {
+    console.log(`Backend running at http://localhost:${PORT}`);
+    if (!initialized) console.log('Add serviceAccountKey.json or FIREBASE_SERVICE_ACCOUNT_JSON to send notifications.');
+  });
+}
